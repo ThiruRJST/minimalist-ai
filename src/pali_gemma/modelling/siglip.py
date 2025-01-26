@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from configs.siglip_config import SigLipVisionConfig
+from src.pali_gemma.configs.siglip_config import SigLipVisionConfig
 
 class SiglipVisionEmbeddings(nn.Module):
     def __init__(self, config: SigLipVisionConfig):

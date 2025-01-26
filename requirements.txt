@@ -10,3 +10,4 @@ rich
 matplotlib
 seaborn
 wandb
+pytest
