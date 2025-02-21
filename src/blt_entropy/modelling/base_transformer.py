@@ -18,7 +18,7 @@ def reshape_freq_tensor(freq_cis, x, seq_dim):
     ndim=x.ndim
     shape = [
         d if i ==  seq_dim or i == ndim - 3 else 1 for i, d in enumerate(x.shape[:-2])
-    ]
+    ]+[2, 2]
     return freq_cis.view(*shape)
 
 def apply_rotary_embedding(
@@ -63,7 +63,7 @@ class RotaryEmbedding(nn.Module):
     
     def forward(self, seqlen: Optional[int] = None, token_id: Optional[torch.Tensor] = None):
         
-        check = seqlen is None and token_id is None
+        check = seqlen is None or token_id is None
         assert check, "Either seqlen or token_id must be provided."
         if token_id is not None:
             return self.freq_cis[token_id]
@@ -119,6 +119,8 @@ class Attention(nn.Module):
         xq = xq.view(batch_size, seqlen, self.n_heads, self.head_dim)
         xk = xk.view(batch_size, seqlen, self.n_heads, self.head_dim)
         xv = xv.view(batch_size, seqlen, self.n_heads, self.head_dim)
+        
+        print(xq.shape, xk.shape, xv.shape)
         
         #applying rotary embedding to query and key tensors
         xq, xk = apply_rotary_embedding(xq, xk, 1, freq_cis[0:seqlen])
@@ -268,7 +270,7 @@ class BaseTransformer(nn.Module):
         
     def forward(self, h, tok_idx: Optional[torch.Tensor]=None):
         
-        freq_cis = self.rope_embedding(seqlen=self.model_args.max_seqlen, tok_idx=tok_idx)
+        freq_cis = self.rope_embedding(seqlen=self.model_args.max_seqlen, token_id=tok_idx)
         
         for i, layer in enumerate(self.layers):
             h = layer(
