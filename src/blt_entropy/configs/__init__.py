@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-
+from enum import Enum
+from pydantic import BaseModel
 
 @dataclass
 class BLTEntropyModelConfig:
@@ -15,33 +16,30 @@ class BLTEntropyModelConfig:
     eps: float = 1e-6
     init_std_factor = "disabled"
     init_base_std = None
+
+
+class PatchingModes(str, Enum):
+    entropy = "entropy"
+    bpe = "bpe"
+    bpe_patcher = "bpe_patcher"
+    space = "space"
+    static = "static"
+    byte = "byte"
+
+
+class PatcherArgs(BaseModel):
+    patching_mode: PatchingModes = PatchingModes.entropy
+    patching_device: str = "cuda"
+    entropy_model_checkpoint_dir: str | None = None
+    realtime_patching: bool = False
+    threshold: float = 1.335442066192627
+    threshold_add: float | None = None
+    max_patch_length: int | None = None
+    patch_size: float = 4.5
+    patching_batch_size: int = 1
+    device: str = "cuda"
+    monotonicity: bool = False
+    log_time: bool = False
     
-
-"""
-class BaseTransformerArgs(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    dim: int = 512
-    n_layers: int = 8
-    head_dim: int | None = None
-    n_heads: int | None = None
-    n_kv_heads: int | None = None
-
-    ffn_dim_multiplier: float | None = None
-
-    multiple_of: int = 256
-
-    norm_eps: float = 1e-5
-
-    rope_theta: float = 10000.0
-
-    init_base_std: float | None = None
-    init_std_factor: InitStdFactor = InitStdFactor.DISABLED
-
-    max_seqlen: int = 1024
-
-    attn_impl: str | None = "sdpa"
-    attn_bias_type: str | None = None
-    # Special token config
-    eos_id: int | None = EOS_ID
-
-"""
+    def build(self) -> "Patcher":
+        return Patcher(self)
